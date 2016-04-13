@@ -118,16 +118,27 @@ class Shadow(FilterWithDialog):
 		roundFilter.roundLayer_radius_checkSelection_visualCorrect_grid_(
 						offsetLayer, offset,
 						False, True, False )
-						
-		shadowLayer = offsetLayer.copy()
-		shadowLayer.applyTransform( (1,0,0,1,distanceX,-distanceY) )
 		
-		offsetLayer.appendLayer_(shadowLayer)
+		# Create and offset Shadow only if it has a distance:
+		if distanceX != 0.0 or distanceY != 0.0:
+			shadowLayer = offsetLayer.copy()
+			shadowLayer.applyTransform( (1,0,0,1,distanceX,-distanceY) )
+			try:
+				offsetLayer.appendLayer_(shadowLayer)
+			except:
+				self.mergeLayerIntoLayer(shadowLayer,offsetLayer)
+		
 		offsetLayer.removeOverlap()
 		layer.removeOverlap()
-		layer.appendLayer_(offsetLayer)
+		try:
+			layer.appendLayer_(offsetLayer)
+		except:
+			self.mergeLayerIntoLayer(offsetLayer,layer)
 		layer.correctPathDirection()
 
+	def mergeLayerIntoLayer(self, sourceLayer, targetLayer):
+		for p in sourceLayer.paths:
+			targetLayer.addPath_(p.copy())
 	
 	def generateCustomParameter( self ):
 		className = self.__class__.__name__
