@@ -34,7 +34,8 @@ class Shadow(FilterWithDialog):
 			'en': u'Shadow',
 			'de': u'Schatten',
 			'fr': u'Ombre',
-			'nl': u'Schaduw'
+			'nl': u'Schaduw',
+			'es': u'Sombrear'
 		})
 
 		# Load dialog from .nib (without .extension)
