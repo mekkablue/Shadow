@@ -1,24 +1,22 @@
 # encoding: utf-8
 
-###########################################################################################################
+####################################################################################################
 #
+# Filter with dialog Plugin
 #
-#	Filter with dialog Plugin
+# Read the docs:
+# https://github.com/schriftgestalt/GlyphsSDK/tree/master/Python%20Templates/Filter%20with%20Dialog
 #
-#	Read the docs:
-#	https://github.com/schriftgestalt/GlyphsSDK/tree/master/Python%20Templates/Filter%20with%20Dialog
+# For help on the use of Interface Builder:
+# https://github.com/schriftgestalt/GlyphsSDK/tree/master/Python%20Templates
 #
-#	For help on the use of Interface Builder:
-#	https://github.com/schriftgestalt/GlyphsSDK/tree/master/Python%20Templates
-#
-#
-###########################################################################################################
+####################################################################################################
 
 
 from GlyphsApp.plugins import *
 
 class Shadow(FilterWithDialog):
-
+	
 	# Definitions of IBOutlets
 	
 	# The NSView object from the User Interface. Keep this here!
@@ -39,8 +37,8 @@ class Shadow(FilterWithDialog):
 		})
 
 		# Load dialog from .nib (without .extension)
-		self.loadNib('IBdialog')
-
+		self.loadNib('IBdialog', __file__)
+	
 	# On dialog show
 	def start(self):
 
@@ -51,7 +49,7 @@ class Shadow(FilterWithDialog):
 			'com.mekkablue.Shadow.distanceY': 15.0
 		}
 		for key in defaults.keys():
-			if not Glyphs.defaults[key]:
+			if not Glyphs.defaults[key] is None:
 				Glyphs.defaults[key] = defaults[key]
 
 		# Set value of text field
@@ -61,7 +59,10 @@ class Shadow(FilterWithDialog):
 		
 		# Set focus to text field
 		self.offsetField.becomeFirstResponder()
-
+		
+		# Trigger redraw
+		self.update()
+		
 	# Setting Offset, triggered by UI
 	@objc.IBAction
 	def setOffset_( self, sender ):
@@ -85,7 +86,7 @@ class Shadow(FilterWithDialog):
 		Glyphs.defaults['com.mekkablue.Shadow.distanceY'] = sender.floatValue()
 		# Trigger redraw
 		self.update()
-
+	
 	# Actual filter
 	def filter(self, layer, inEditView, customParameters):
 		
@@ -142,9 +143,16 @@ class Shadow(FilterWithDialog):
 			targetLayer.addPath_(p.copy())
 	
 	def generateCustomParameter( self ):
+		return "%s; shift:%s;" % (self.__class__.__name__, Glyphs.defaults['com.myname.myfilter.value'] )
+	
+	def generateCustomParameter( self ):
 		className = self.__class__.__name__
 		parameterString = "%s; " % className
 		for key in ("offset", "distanceX", "distanceY"):
 			parameterString += "%s:%s; " % ( key, Glyphs.defaults['com.mekkablue.%s.%s'%(className,key)] )
 			
 		return parameterString.strip()[:-1]
+	
+	def __file__(self):
+		"""Please leave this method unchanged"""
+		return __file__
