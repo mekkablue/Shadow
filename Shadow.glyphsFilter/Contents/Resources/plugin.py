@@ -12,17 +12,14 @@
 #
 ####################################################################################################
 
-
+import objc
+from GlyphsApp import *
 from GlyphsApp.plugins import *
 
 class Shadow(FilterWithDialog):
 	
 	# Definitions of IBOutlets
-	
-	# The NSView object from the User Interface. Keep this here!
 	dialog = objc.IBOutlet()
-
-	# Text field in dialog
 	offsetField = objc.IBOutlet()
 	distanceXField = objc.IBOutlet()
 	distanceYField = objc.IBOutlet()
@@ -41,16 +38,10 @@ class Shadow(FilterWithDialog):
 	
 	# On dialog show
 	def start(self):
-
-		# Set default setting if not present
-		defaults = {
-			'com.mekkablue.Shadow.offset': 15.0,
-			'com.mekkablue.Shadow.distanceX': 15.0,
-			'com.mekkablue.Shadow.distanceY': 15.0
-		}
-		for key in defaults.keys():
-			if not Glyphs.defaults[key] is None:
-				Glyphs.defaults[key] = defaults[key]
+		# Set defaults
+		Glyphs.registerDefault('com.mekkablue.Shadow.offset', 15.0)
+		Glyphs.registerDefault('com.mekkablue.Shadow.distanceX', 15.0)
+		Glyphs.registerDefault('com.mekkablue.Shadow.distanceY', 15.0)
 
 		# Set value of text field
 		self.offsetField.setStringValue_(Glyphs.defaults['com.mekkablue.Shadow.offset'])
@@ -71,40 +62,33 @@ class Shadow(FilterWithDialog):
 		# Trigger redraw
 		self.update()
 
-	# Setting x Distance, triggered by UI
 	@objc.IBAction
 	def setDistanceX_( self, sender ):
-		# Store value coming in from dialog
 		Glyphs.defaults['com.mekkablue.Shadow.distanceX'] = sender.floatValue()
-		# Trigger redraw
 		self.update()
 
-	# Setting y Distance, triggered by UI
 	@objc.IBAction
 	def setDistanceY_( self, sender ):
-		# Store value coming in from dialog
 		Glyphs.defaults['com.mekkablue.Shadow.distanceY'] = sender.floatValue()
-		# Trigger redraw
 		self.update()
 	
 	# Actual filter
 	def filter(self, layer, inEditView, customParameters):
+		# fallback values:
+		offset, distanceX, distanceY = 15, 15, 15
 		
 		# Called on font export, get value from customParameters
 		if customParameters.has_key('offset'):
 			offset = customParameters['offset']
-		# Called through UI, use stored value
-		else:
-			offset = float(Glyphs.defaults['com.mekkablue.Shadow.offset'])
-
 		if customParameters.has_key('distanceX'):
 			distanceX = customParameters['distanceX']
-		else:
-			distanceX = float(Glyphs.defaults['com.mekkablue.Shadow.distanceX'])
-			
 		if customParameters.has_key('distanceY'):
 			distanceY = customParameters['distanceY']
-		else:
+
+		# Called through UI, use stored value
+		if inEditView:
+			offset = float(Glyphs.defaults['com.mekkablue.Shadow.offset'])
+			distanceX = float(Glyphs.defaults['com.mekkablue.Shadow.distanceX'])
 			distanceY = float(Glyphs.defaults['com.mekkablue.Shadow.distanceY'])
 
 		offsetFilter = NSClassFromString("GlyphsFilterOffsetCurve")
@@ -143,16 +127,13 @@ class Shadow(FilterWithDialog):
 			targetLayer.addPath_(p.copy())
 	
 	def generateCustomParameter( self ):
-		return "%s; shift:%s;" % (self.__class__.__name__, Glyphs.defaults['com.myname.myfilter.value'] )
-	
-	def generateCustomParameter( self ):
-		className = self.__class__.__name__
-		parameterString = "%s; " % className
-		for key in ("offset", "distanceX", "distanceY"):
-			parameterString += "%s:%s; " % ( key, Glyphs.defaults['com.mekkablue.%s.%s'%(className,key)] )
-			
-		return parameterString.strip()[:-1]
-	
+		return "%s; offset:%s; distanceX:%s; distanceY:%s" % (
+			self.__class__.__name__,
+			Glyphs.defaults['com.mekkablue.Shadow.offset'],
+			Glyphs.defaults['com.mekkablue.Shadow.distanceX'],
+			Glyphs.defaults['com.mekkablue.Shadow.distanceY'],
+			)
+		
 	def __file__(self):
 		"""Please leave this method unchanged"""
 		return __file__
