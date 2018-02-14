@@ -74,53 +74,54 @@ class Shadow(FilterWithDialog):
 	
 	# Actual filter
 	def filter(self, layer, inEditView, customParameters):
-		# fallback values:
-		offset, distanceX, distanceY = 15, 15, 15
+		if not layer is None: # circumvents a bug in 2.5b
+			# fallback values:
+			offset, distanceX, distanceY = 15, 15, 15
 		
-		# Called on font export, get value from customParameters
-		if customParameters.has_key('offset'):
-			offset = customParameters['offset']
-		if customParameters.has_key('distanceX'):
-			distanceX = customParameters['distanceX']
-		if customParameters.has_key('distanceY'):
-			distanceY = customParameters['distanceY']
+			# Called on font export, get value from customParameters
+			if customParameters.has_key('offset'):
+				offset = customParameters['offset']
+			if customParameters.has_key('distanceX'):
+				distanceX = customParameters['distanceX']
+			if customParameters.has_key('distanceY'):
+				distanceY = customParameters['distanceY']
 
-		# Called through UI, use stored value
-		if inEditView:
-			offset = float(Glyphs.defaults['com.mekkablue.Shadow.offset'])
-			distanceX = float(Glyphs.defaults['com.mekkablue.Shadow.distanceX'])
-			distanceY = float(Glyphs.defaults['com.mekkablue.Shadow.distanceY'])
+			# Called through UI, use stored value
+			if inEditView:
+				offset = float(Glyphs.defaults['com.mekkablue.Shadow.offset'])
+				distanceX = float(Glyphs.defaults['com.mekkablue.Shadow.distanceX'])
+				distanceY = float(Glyphs.defaults['com.mekkablue.Shadow.distanceY'])
 
-		offsetFilter = NSClassFromString("GlyphsFilterOffsetCurve")
-		roundFilter = NSClassFromString("GlyphsFilterRoundCorner")
+			offsetFilter = NSClassFromString("GlyphsFilterOffsetCurve")
+			roundFilter = NSClassFromString("GlyphsFilterRoundCorner")
 		
-		layer.decomposeComponents()
-		offsetLayer = layer.copy()
+			layer.decomposeComponents()
+			offsetLayer = layer.copy()
 		
-		offsetFilter.offsetLayer_offsetX_offsetY_makeStroke_autoStroke_position_error_shadow_(
-						offsetLayer, offset, offset,
-						False, False, 0.5, None,None)
+			offsetFilter.offsetLayer_offsetX_offsetY_makeStroke_autoStroke_position_error_shadow_(
+							offsetLayer, offset, offset,
+							False, False, 0.5, None,None)
 
-		roundFilter.roundLayer_radius_checkSelection_visualCorrect_grid_(
-						offsetLayer, offset,
-						False, True, False )
+			roundFilter.roundLayer_radius_checkSelection_visualCorrect_grid_(
+							offsetLayer, offset,
+							False, True, False )
 		
-		# Create and offset Shadow only if it has a distance:
-		if distanceX != 0.0 or distanceY != 0.0:
-			shadowLayer = offsetLayer.copy()
-			shadowLayer.applyTransform( (1,0,0,1,distanceX,-distanceY) )
+			# Create and offset Shadow only if it has a distance:
+			if distanceX != 0.0 or distanceY != 0.0:
+				shadowLayer = offsetLayer.copy()
+				shadowLayer.applyTransform( (1,0,0,1,distanceX,-distanceY) )
+				try:
+					offsetLayer.appendLayer_(shadowLayer)
+				except:
+					self.mergeLayerIntoLayer(shadowLayer,offsetLayer)
+		
+			offsetLayer.removeOverlap()
+			layer.removeOverlap()
 			try:
-				offsetLayer.appendLayer_(shadowLayer)
+				layer.appendLayer_(offsetLayer)
 			except:
-				self.mergeLayerIntoLayer(shadowLayer,offsetLayer)
-		
-		offsetLayer.removeOverlap()
-		layer.removeOverlap()
-		try:
-			layer.appendLayer_(offsetLayer)
-		except:
-			self.mergeLayerIntoLayer(offsetLayer,layer)
-		layer.correctPathDirection()
+				self.mergeLayerIntoLayer(offsetLayer,layer)
+			layer.correctPathDirection()
 
 	def mergeLayerIntoLayer(self, sourceLayer, targetLayer):
 		for p in sourceLayer.paths:
