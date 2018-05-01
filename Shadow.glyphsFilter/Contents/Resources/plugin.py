@@ -117,6 +117,11 @@ class Shadow(FilterWithDialog):
 				
 				# only create shadow if there is no offset rim:
 				if offset == 0.0:
+					# prepare layers for subtraction:
+					layer.removeOverlap()
+					shadowLayer.removeOverlap()
+					
+					# subtract:
 					subtractedPaths = [p for p in shadowLayer.paths]
 					pathOperator = NSClassFromString("GSPathOperator").alloc().init()
 					pathOperator.subtractPaths_from_error_debug_(
@@ -144,7 +149,8 @@ class Shadow(FilterWithDialog):
 					layer.appendLayer_(offsetLayer)
 				except:
 					self.mergeLayerIntoLayer(offsetLayer,layer)
-					
+			
+			layer.cleanUpPaths()
 			layer.correctPathDirection()
 
 	def mergeLayerIntoLayer(self, sourceLayer, targetLayer):
