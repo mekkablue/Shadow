@@ -98,29 +98,53 @@ class Shadow(FilterWithDialog):
 			layer.decomposeComponents()
 			offsetLayer = layer.copy()
 		
-			offsetFilter.offsetLayer_offsetX_offsetY_makeStroke_autoStroke_position_error_shadow_(
-							offsetLayer, offset, offset,
-							False, False, 0.5, None,None)
+			# Create offset rim:
+			if offset != 0.0:
+				offsetFilter.offsetLayer_offsetX_offsetY_makeStroke_autoStroke_position_error_shadow_(
+								offsetLayer, 
+								offset, offset,
+								False, False, 0.5, None,None)
 
-			roundFilter.roundLayer_radius_checkSelection_visualCorrect_grid_(
-							offsetLayer, offset,
-							False, True, False )
+				roundFilter.roundLayer_radius_checkSelection_visualCorrect_grid_(
+								offsetLayer, 
+								offset,
+								False, True, False )
 		
 			# Create and offset Shadow only if it has a distance:
 			if distanceX != 0.0 or distanceY != 0.0:
 				shadowLayer = offsetLayer.copy()
 				shadowLayer.applyTransform( (1,0,0,1,distanceX,-distanceY) )
-				try:
-					offsetLayer.appendLayer_(shadowLayer)
-				except:
-					self.mergeLayerIntoLayer(shadowLayer,offsetLayer)
+				
+				# only create shadow if there is no offset rim:
+				if offset == 0.0:
+					subtractedPaths = [p for p in shadowLayer.paths]
+					pathOperator = NSClassFromString("GSPathOperator").alloc().init()
+					pathOperator.subtractPaths_from_error_debug_(
+						[p for p in layer.paths],
+						subtractedPaths,
+						None, False
+					)
+					
+					# transfer the subtraction result into the main layer, and we are done:
+					layer.paths = subtractedPaths
+					
+				# if there is an offset, merge rim and shadow layers:
+				else:
+					try:
+						offsetLayer.appendLayer_(shadowLayer)
+					except:
+						self.mergeLayerIntoLayer(shadowLayer,offsetLayer)
 		
-			offsetLayer.removeOverlap()
 			layer.removeOverlap()
-			try:
-				layer.appendLayer_(offsetLayer)
-			except:
-				self.mergeLayerIntoLayer(offsetLayer,layer)
+			
+			# if there is an offset, merge original paths with merged rim+shadow paths:
+			if offset != 0.0:
+				offsetLayer.removeOverlap()
+				try:
+					layer.appendLayer_(offsetLayer)
+				except:
+					self.mergeLayerIntoLayer(offsetLayer,layer)
+					
 			layer.correctPathDirection()
 
 	def mergeLayerIntoLayer(self, sourceLayer, targetLayer):
