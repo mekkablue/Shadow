@@ -77,17 +77,17 @@ class Shadow(FilterWithDialog):
 		if not layer is None: # circumvents a bug in 2.5b
 			# fallback values:
 			offset, distanceX, distanceY = 15, 15, 15
-		
-			# Called on font export, get value from customParameters
-			if customParameters.has_key('offset'):
-				offset = customParameters['offset']
-			if customParameters.has_key('distanceX'):
-				distanceX = customParameters['distanceX']
-			if customParameters.has_key('distanceY'):
-				distanceY = customParameters['distanceY']
+			if len(customParameters) > 0:
+				# Called on font export, get value from customParameters
+				if customParameters.has_key('offset'):
+					offset = customParameters['offset']
+				if customParameters.has_key('distanceX'):
+					distanceX = customParameters['distanceX']
+				if customParameters.has_key('distanceY'):
+					distanceY = customParameters['distanceY']
 
 			# Called through UI, use stored value
-			if inEditView:
+			else:
 				offset = float(Glyphs.defaults['com.mekkablue.Shadow.offset'])
 				distanceX = float(Glyphs.defaults['com.mekkablue.Shadow.distanceX'])
 				distanceY = float(Glyphs.defaults['com.mekkablue.Shadow.distanceY'])
