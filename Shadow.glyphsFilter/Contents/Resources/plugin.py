@@ -28,9 +28,17 @@ class Shadow(FilterWithDialog):
 		self.menuName = Glyphs.localize({
 			'en': u'Shadow',
 			'de': u'Schatten',
-			'fr': u'Ombre',
+			'fr': u'Ombreur',
 			'nl': u'Schaduw',
-			'es': u'Sombrear'
+			'es': u'Sombrear',
+		})
+		
+		self.actionButtonLabel = Glyphs.localize({
+			'en': u'Apply',
+			'de': u'Anwenden',
+			'fr': u'Ombrer',
+			'nl': u'Toepassen',
+			'es': u'Sombrear',
 		})
 
 		# Load dialog from .nib (without .extension)
