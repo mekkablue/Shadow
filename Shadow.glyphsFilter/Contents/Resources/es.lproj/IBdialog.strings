@@ -1,8 +1,8 @@
 /* "Offset" */
-"STH-Ua-fbl.title" = "Fuerza del filo";
+"STH-Ua-fbl.title" = "Grosor del contorno";
 
 /* Distance X */
-"R5M-D9-h3N.title" = "Distancia x";
+"R5M-D9-h3N.title" = "Distancia horizontal";
 
 /* Distance Y */
-"CUs-Pc-LUE.title" = "Distancia y";
+"CUs-Pc-LUE.title" = "Distancia vertical";
