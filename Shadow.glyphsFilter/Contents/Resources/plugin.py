@@ -31,6 +31,7 @@ class Shadow(FilterWithDialog):
 			'fr': u'Ombreur',
 			'nl': u'Schaduw',
 			'es': u'Sombrear',
+			'zh': u'🌖阴影',
 		})
 		
 		self.actionButtonLabel = Glyphs.localize({
@@ -39,6 +40,7 @@ class Shadow(FilterWithDialog):
 			'fr': u'Ombrer',
 			'nl': u'Toepassen',
 			'es': u'Sombrear',
+			'zh': u'确定',
 		})
 
 		# Load dialog from .nib (without .extension)
