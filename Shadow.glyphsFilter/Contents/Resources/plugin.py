@@ -24,6 +24,7 @@ class Shadow(FilterWithDialog):
 	distanceXField = objc.IBOutlet()
 	distanceYField = objc.IBOutlet()
 	shouldRoundCheckbox = objc.IBOutlet()
+	keepSidebearingsCheckbox = objc.IBOutlet()
 	
 	def settings(self):
 		self.menuName = Glyphs.localize({
@@ -55,6 +56,7 @@ class Shadow(FilterWithDialog):
 		Glyphs.registerDefault('com.mekkablue.Shadow.distanceX', 15.0)
 		Glyphs.registerDefault('com.mekkablue.Shadow.distanceY', 15.0)
 		Glyphs.registerDefault('com.mekkablue.Shadow.shouldRound', 1)
+		Glyphs.registerDefault('com.mekkablue.Shadow.keepSidebearings', 1)
 
 		# Set value of text field
 		self.offsetField.setStringValue_(Glyphs.defaults['com.mekkablue.Shadow.offset'])
@@ -62,6 +64,7 @@ class Shadow(FilterWithDialog):
 		self.distanceXField.setStringValue_(Glyphs.defaults['com.mekkablue.Shadow.distanceX'])
 		self.distanceYField.setStringValue_(Glyphs.defaults['com.mekkablue.Shadow.distanceY'])
 		self.shouldRoundCheckbox.setState_(Glyphs.defaults['com.mekkablue.Shadow.shouldRound'])
+		self.keepSidebearings.setState_(Glyphs.defaults['com.mekkablue.Shadow.keepSidebearings'])
 		
 		# Set focus to text field
 		self.offsetField.becomeFirstResponder()
@@ -100,12 +103,19 @@ class Shadow(FilterWithDialog):
 	def setShouldRound_( self, sender ):
 		Glyphs.defaults['com.mekkablue.Shadow.shouldRound'] = sender.state()
 		self.update()
+
+	@objc.IBAction
+	def setKeepSidebearings_( self, sender ):
+		Glyphs.defaults['com.mekkablue.Shadow.keepSidebearings'] = sender.state()
+		self.update()
 	
 	# Actual filter
 	def filter(self, layer, inEditView, customParameters):
 		if not layer is None: # circumvents a bug in 2.5b
 			# fallback values:
-			offset, distanceX, distanceY = 15, 15, 15
+			offset, offsetY, distanceX, distanceY = 15, 15, 15, 15
+			shouldRound, keepSidebearings = 1, 0
+			
 			if len(customParameters) > 0:
 				# Called on font export, get value from customParameters
 				if customParameters.has_key('offset'):
@@ -118,6 +128,8 @@ class Shadow(FilterWithDialog):
 					distanceY = customParameters['distanceY']
 				if customParameters.has_key('shouldRound'):
 					distanceY = customParameters['shouldRound']
+				if customParameters.has_key('keepSidebearings'):
+					distanceY = customParameters['keepSidebearings']
 
 			# Called through UI, use stored value
 			else:
@@ -126,9 +138,12 @@ class Shadow(FilterWithDialog):
 				distanceX = float(Glyphs.defaults['com.mekkablue.Shadow.distanceX'])
 				distanceY = float(Glyphs.defaults['com.mekkablue.Shadow.distanceY'])
 				shouldRound = bool(Glyphs.defaults['com.mekkablue.Shadow.shouldRound'])
+				keepSidebearings = bool(Glyphs.defaults['com.mekkablue.Shadow.keepSidebearings'])
 
 			layer.decomposeComponents()
 			offsetLayer = layer.copy()
+			originalLSB = layer.LSB
+			originalRSB = layer.RSB
 		
 			# Create offset rim:
 			if offset != 0.0:
@@ -187,19 +202,24 @@ class Shadow(FilterWithDialog):
 			
 			layer.cleanUpPaths()
 			layer.correctPathDirection()
+			
+			if keepSidebearings:
+				layer.LSB = originalLSB
+				layer.RSB = originalRSB
 
 	def mergeLayerIntoLayer(self, sourceLayer, targetLayer):
 		for p in sourceLayer.paths:
 			targetLayer.addPath_(p.copy())
 	
 	def generateCustomParameter( self ):
-		return "%s; offset:%s; offsetY:%s; distanceX:%s; distanceY:%s; shouldRound:%i" % (
+		return "%s; offset:%s; offsetY:%s; distanceX:%s; distanceY:%s; shouldRound:%i; keepSidebearings:%i" % (
 			self.__class__.__name__,
 			Glyphs.defaults['com.mekkablue.Shadow.offset'],
 			Glyphs.defaults['com.mekkablue.Shadow.offsetY'],
 			Glyphs.defaults['com.mekkablue.Shadow.distanceX'],
 			Glyphs.defaults['com.mekkablue.Shadow.distanceY'],
 			Glyphs.defaults['com.mekkablue.Shadow.shouldRound'],
+			Glyphs.defaults['com.mekkablue.Shadow.keepSidebearings'],
 			)
 		
 	def __file__(self):

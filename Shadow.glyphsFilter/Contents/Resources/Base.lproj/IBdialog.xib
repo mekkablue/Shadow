@@ -10,6 +10,7 @@
                 <outlet property="dialog" destination="1" id="z33-Rd-NLi"/>
                 <outlet property="distanceXField" destination="BgR-XB-LMc" id="khO-qk-WBK"/>
                 <outlet property="distanceYField" destination="gdq-lm-j97" id="zzn-ap-pXo"/>
+                <outlet property="keepSidebearingsCheckbox" destination="0Lh-Ic-95K" id="f3e-V8-pzo"/>
                 <outlet property="offsetField" destination="gfg-Al-aBq" id="gWa-1q-BuO"/>
                 <outlet property="shouldRoundCheckbox" destination="8ZM-AS-1vh" id="Loo-xf-Bb7"/>
             </connections>
@@ -17,10 +18,10 @@
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <customView translatesAutoresizingMaskIntoConstraints="NO" id="1">
-            <rect key="frame" x="0.0" y="0.0" width="282" height="145"/>
+            <rect key="frame" x="0.0" y="0.0" width="282" height="165"/>
             <subviews>
                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="mFs-rT-bLe">
-                    <rect key="frame" x="18" y="107" width="70" height="16"/>
+                    <rect key="frame" x="18" y="127" width="70" height="16"/>
                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Offset" id="STH-Ua-fbl">
                         <font key="font" metaFont="system"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -28,7 +29,7 @@
                     </textFieldCell>
                 </textField>
                 <textField toolTip="The thickness of the outline, use semicolon to separate different x/y thickness." verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="gfg-Al-aBq" customClass="GSSteppingTextField">
-                    <rect key="frame" x="94" y="104" width="168" height="21"/>
+                    <rect key="frame" x="94" y="124" width="168" height="21"/>
                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="K77-Mm-KbD">
                         <font key="font" metaFont="system"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -39,7 +40,7 @@
                     </connections>
                 </textField>
                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="JHm-Ke-kOR">
-                    <rect key="frame" x="18" y="76" width="70" height="16"/>
+                    <rect key="frame" x="18" y="96" width="70" height="16"/>
                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Distance X" id="R5M-D9-h3N">
                         <font key="font" metaFont="system"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -47,7 +48,7 @@
                     </textFieldCell>
                 </textField>
                 <textField toolTip="Horizontal distance of shadow" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="BgR-XB-LMc" customClass="GSSteppingTextField">
-                    <rect key="frame" x="94" y="73" width="168" height="21"/>
+                    <rect key="frame" x="94" y="93" width="168" height="21"/>
                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="6eg-Nj-Url">
                         <font key="font" metaFont="system"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -58,7 +59,7 @@
                     </connections>
                 </textField>
                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="HQ0-Zl-AIW">
-                    <rect key="frame" x="18" y="45" width="70" height="16"/>
+                    <rect key="frame" x="18" y="65" width="70" height="16"/>
                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Distance Y" id="CUs-Pc-LUE">
                         <font key="font" metaFont="system"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -66,7 +67,7 @@
                     </textFieldCell>
                 </textField>
                 <textField toolTip="Vertical distance of shadow" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="gdq-lm-j97" customClass="GSSteppingTextField">
-                    <rect key="frame" x="94" y="42" width="168" height="21"/>
+                    <rect key="frame" x="94" y="62" width="168" height="21"/>
                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" continuous="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="g25-Cd-WvL">
                         <font key="font" metaFont="system"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -77,13 +78,23 @@
                     </connections>
                 </textField>
                 <button toolTip="Whether or not to round the corners of the dark outline." verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="8ZM-AS-1vh">
-                    <rect key="frame" x="92" y="18" width="172" height="18"/>
+                    <rect key="frame" x="92" y="38" width="172" height="18"/>
                     <buttonCell key="cell" type="check" title="Round Corners" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="DVw-4E-6dJ">
                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                         <font key="font" metaFont="system"/>
                     </buttonCell>
                     <connections>
                         <action selector="setShouldRound:" target="-2" id="kdJ-Ca-noZ"/>
+                    </connections>
+                </button>
+                <button toolTip="Whether or not to round the corners of the dark outline." verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="0Lh-Ic-95K">
+                    <rect key="frame" x="92" y="18" width="172" height="18"/>
+                    <buttonCell key="cell" type="check" title="Keep Sidebearings" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="LK7-xn-6O8">
+                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="setKeepSidebearings:" target="-2" id="JGJ-59-eEx"/>
                     </connections>
                 </button>
             </subviews>
@@ -97,20 +108,23 @@
                 <constraint firstItem="gfg-Al-aBq" firstAttribute="firstBaseline" secondItem="mFs-rT-bLe" secondAttribute="firstBaseline" id="GuY-57-nZ5"/>
                 <constraint firstAttribute="trailing" secondItem="gfg-Al-aBq" secondAttribute="trailing" constant="20" symbolic="YES" id="LBn-vF-MgV"/>
                 <constraint firstItem="8ZM-AS-1vh" firstAttribute="leading" secondItem="gdq-lm-j97" secondAttribute="leading" id="MWp-Hr-mGr"/>
+                <constraint firstItem="0Lh-Ic-95K" firstAttribute="top" secondItem="8ZM-AS-1vh" secondAttribute="bottom" constant="6" symbolic="YES" id="NUj-YK-BxZ"/>
                 <constraint firstItem="gfg-Al-aBq" firstAttribute="leading" secondItem="mFs-rT-bLe" secondAttribute="trailing" constant="8" symbolic="YES" id="Pfz-hb-iaW"/>
                 <constraint firstItem="HQ0-Zl-AIW" firstAttribute="trailing" secondItem="mFs-rT-bLe" secondAttribute="trailing" id="TMb-pQ-mN3"/>
                 <constraint firstItem="mFs-rT-bLe" firstAttribute="leading" secondItem="1" secondAttribute="leading" constant="20" symbolic="YES" id="VaB-Gx-1Ny"/>
+                <constraint firstItem="8ZM-AS-1vh" firstAttribute="top" secondItem="gdq-lm-j97" secondAttribute="bottom" constant="8" symbolic="YES" id="aMo-wG-di9"/>
                 <constraint firstAttribute="trailing" secondItem="gdq-lm-j97" secondAttribute="trailing" constant="20" symbolic="YES" id="ecm-Xc-ige"/>
                 <constraint firstItem="BgR-XB-LMc" firstAttribute="firstBaseline" secondItem="JHm-Ke-kOR" secondAttribute="firstBaseline" id="fLV-iL-9Cg"/>
                 <constraint firstItem="gdq-lm-j97" firstAttribute="top" secondItem="BgR-XB-LMc" secondAttribute="bottom" constant="10" symbolic="YES" id="mHN-58-cwd"/>
+                <constraint firstAttribute="bottom" secondItem="0Lh-Ic-95K" secondAttribute="bottom" constant="20" symbolic="YES" id="mir-GV-hzh"/>
+                <constraint firstItem="0Lh-Ic-95K" firstAttribute="trailing" secondItem="8ZM-AS-1vh" secondAttribute="trailing" id="pFx-Kj-tD3"/>
                 <constraint firstItem="HQ0-Zl-AIW" firstAttribute="leading" secondItem="1" secondAttribute="leading" constant="20" symbolic="YES" id="qJy-ZT-Wu5"/>
                 <constraint firstItem="gfg-Al-aBq" firstAttribute="top" secondItem="1" secondAttribute="top" constant="20" symbolic="YES" id="scQ-lR-S84"/>
                 <constraint firstItem="JHm-Ke-kOR" firstAttribute="trailing" secondItem="mFs-rT-bLe" secondAttribute="trailing" id="szw-8h-Ayf"/>
+                <constraint firstItem="0Lh-Ic-95K" firstAttribute="leading" secondItem="8ZM-AS-1vh" secondAttribute="leading" id="tAx-mR-PdL"/>
                 <constraint firstItem="8ZM-AS-1vh" firstAttribute="trailing" secondItem="gdq-lm-j97" secondAttribute="trailing" id="tWw-M5-3Ri"/>
-                <constraint firstItem="8ZM-AS-1vh" firstAttribute="top" secondItem="gdq-lm-j97" secondAttribute="bottom" constant="8" symbolic="YES" id="u1u-Pa-vXU"/>
-                <constraint firstAttribute="bottom" secondItem="8ZM-AS-1vh" secondAttribute="bottom" constant="20" symbolic="YES" id="xvn-lL-Pfd"/>
             </constraints>
-            <point key="canvasLocation" x="151" y="211"/>
+            <point key="canvasLocation" x="151" y="220.5"/>
         </customView>
     </objects>
 </document>
