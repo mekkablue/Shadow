@@ -23,6 +23,7 @@ class Shadow(FilterWithDialog):
 	offsetField = objc.IBOutlet()
 	distanceXField = objc.IBOutlet()
 	distanceYField = objc.IBOutlet()
+	shouldRoundCheckbox = objc.IBOutlet()
 	
 	def settings(self):
 		self.menuName = Glyphs.localize({
@@ -50,13 +51,17 @@ class Shadow(FilterWithDialog):
 	def start(self):
 		# Set defaults
 		Glyphs.registerDefault('com.mekkablue.Shadow.offset', 15.0)
+		Glyphs.registerDefault('com.mekkablue.Shadow.offsetY', 15.0)
 		Glyphs.registerDefault('com.mekkablue.Shadow.distanceX', 15.0)
 		Glyphs.registerDefault('com.mekkablue.Shadow.distanceY', 15.0)
+		Glyphs.registerDefault('com.mekkablue.Shadow.shouldRound', 1)
 
 		# Set value of text field
 		self.offsetField.setStringValue_(Glyphs.defaults['com.mekkablue.Shadow.offset'])
+		self.offsetField.setStringValue_(Glyphs.defaults['com.mekkablue.Shadow.offsetY'])
 		self.distanceXField.setStringValue_(Glyphs.defaults['com.mekkablue.Shadow.distanceX'])
 		self.distanceYField.setStringValue_(Glyphs.defaults['com.mekkablue.Shadow.distanceY'])
+		self.shouldRoundCheckbox.setState_(Glyphs.defaults['com.mekkablue.Shadow.shouldRound'])
 		
 		# Set focus to text field
 		self.offsetField.becomeFirstResponder()
@@ -68,7 +73,16 @@ class Shadow(FilterWithDialog):
 	@objc.IBAction
 	def setOffset_( self, sender ):
 		# Store value coming in from dialog
-		Glyphs.defaults['com.mekkablue.Shadow.offset'] = sender.floatValue()
+		if ";" in sender.stringValue():
+			try:
+				Glyphs.defaults['com.mekkablue.Shadow.offset'] = int(sender.stringValue().split(";")[0].strip())
+				Glyphs.defaults['com.mekkablue.Shadow.offsetY'] = int(sender.stringValue().split(";")[1].strip())
+			except:
+				# exit gracefully (probably user did not finish entering his values)
+				pass
+		else:
+			Glyphs.defaults['com.mekkablue.Shadow.offset'] = sender.intValue()
+			Glyphs.defaults['com.mekkablue.Shadow.offsetY'] = sender.intValue()
 		# Trigger redraw
 		self.update()
 
@@ -81,6 +95,11 @@ class Shadow(FilterWithDialog):
 	def setDistanceY_( self, sender ):
 		Glyphs.defaults['com.mekkablue.Shadow.distanceY'] = sender.floatValue()
 		self.update()
+
+	@objc.IBAction
+	def setShouldRound_( self, sender ):
+		Glyphs.defaults['com.mekkablue.Shadow.shouldRound'] = sender.state()
+		self.update()
 	
 	# Actual filter
 	def filter(self, layer, inEditView, customParameters):
@@ -91,34 +110,40 @@ class Shadow(FilterWithDialog):
 				# Called on font export, get value from customParameters
 				if customParameters.has_key('offset'):
 					offset = customParameters['offset']
+				if customParameters.has_key('offsetY'):
+					offsetY = customParameters['offsetY']
 				if customParameters.has_key('distanceX'):
 					distanceX = customParameters['distanceX']
 				if customParameters.has_key('distanceY'):
 					distanceY = customParameters['distanceY']
+				if customParameters.has_key('shouldRound'):
+					distanceY = customParameters['shouldRound']
 
 			# Called through UI, use stored value
 			else:
-				offset = float(Glyphs.defaults['com.mekkablue.Shadow.offset'])
+				offset = int(Glyphs.defaults['com.mekkablue.Shadow.offset'])
+				offsetY = int(Glyphs.defaults['com.mekkablue.Shadow.offsetY'])
 				distanceX = float(Glyphs.defaults['com.mekkablue.Shadow.distanceX'])
 				distanceY = float(Glyphs.defaults['com.mekkablue.Shadow.distanceY'])
+				shouldRound = bool(Glyphs.defaults['com.mekkablue.Shadow.shouldRound'])
 
-			offsetFilter = NSClassFromString("GlyphsFilterOffsetCurve")
-			roundFilter = NSClassFromString("GlyphsFilterRoundCorner")
-		
 			layer.decomposeComponents()
 			offsetLayer = layer.copy()
 		
 			# Create offset rim:
 			if offset != 0.0:
+				offsetFilter = NSClassFromString("GlyphsFilterOffsetCurve")
 				offsetFilter.offsetLayer_offsetX_offsetY_makeStroke_autoStroke_position_error_shadow_(
 								offsetLayer, 
-								offset, offset,
+								offset, offsetY,
 								False, False, 0.5, None,None)
-
-				roundFilter.roundLayer_radius_checkSelection_visualCorrect_grid_(
-								offsetLayer, 
-								offset,
-								False, True, False )
+				
+				if shouldRound:
+					roundFilter = NSClassFromString("GlyphsFilterRoundCorner")
+					roundFilter.roundLayer_radius_checkSelection_visualCorrect_grid_(
+									offsetLayer, 
+									offset,
+									False, True, False )
 		
 			# Create and offset Shadow only if it has a distance:
 			if distanceX != 0.0 or distanceY != 0.0:
@@ -168,11 +193,13 @@ class Shadow(FilterWithDialog):
 			targetLayer.addPath_(p.copy())
 	
 	def generateCustomParameter( self ):
-		return "%s; offset:%s; distanceX:%s; distanceY:%s" % (
+		return "%s; offset:%s; offsetY:%s; distanceX:%s; distanceY:%s; shouldRound:%i" % (
 			self.__class__.__name__,
 			Glyphs.defaults['com.mekkablue.Shadow.offset'],
+			Glyphs.defaults['com.mekkablue.Shadow.offsetY'],
 			Glyphs.defaults['com.mekkablue.Shadow.distanceX'],
 			Glyphs.defaults['com.mekkablue.Shadow.distanceY'],
+			Glyphs.defaults['com.mekkablue.Shadow.shouldRound'],
 			)
 		
 	def __file__(self):
