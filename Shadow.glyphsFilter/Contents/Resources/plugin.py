@@ -12,9 +12,42 @@
 #
 ####################################################################################################
 
-import objc
+import objc, math
 from GlyphsApp import *
 from GlyphsApp.plugins import *
+
+from AppKit import NSAffineTransform, NSAffineTransformStruct
+
+def transform(shiftX=0.0, shiftY=0.0, rotate=0.0, skew=0.0, scale=1.0):
+	"""
+	Returns an NSAffineTransform object for transforming layers.
+	Apply an NSAffineTransform t object like this:
+		Layer.transform_checkForSelection_doComponents_(t,False,True)
+	Access its transformation matrix like this:
+		tMatrix = t.transformStruct() # returns the 6-float tuple
+	Apply the matrix tuple like this:
+		Layer.applyTransform(tMatrix)
+		Component.applyTransform(tMatrix)
+		Path.applyTransform(tMatrix)
+	Chain multiple NSAffineTransform objects t1, t2 like this:
+		t1.appendTransform_(t2)
+	"""
+	myTransform = NSAffineTransform.transform()
+	if rotate:
+		myTransform.rotateByDegrees_(rotate)
+	if scale != 1.0:
+		myTransform.scaleBy_(scale)
+	if not (shiftX == 0.0 and shiftY == 0.0):
+		myTransform.translateXBy_yBy_(shiftX,shiftY)
+	if skew:
+		skewStruct = NSAffineTransformStruct()
+		skewStruct.m11 = 1.0
+		skewStruct.m22 = 1.0
+		skewStruct.m21 = math.tan(math.radians(skew))
+		skewTransform = NSAffineTransform.transform()
+		skewTransform.setTransformStruct_(skewStruct)
+		myTransform.appendTransform_(skewTransform)
+	return myTransform
 
 class Shadow(FilterWithDialog):
 	
@@ -64,7 +97,7 @@ class Shadow(FilterWithDialog):
 		self.distanceXField.setStringValue_(Glyphs.defaults['com.mekkablue.Shadow.distanceX'])
 		self.distanceYField.setStringValue_(Glyphs.defaults['com.mekkablue.Shadow.distanceY'])
 		self.shouldRoundCheckbox.setState_(Glyphs.defaults['com.mekkablue.Shadow.shouldRound'])
-		self.keepSidebearings.setState_(Glyphs.defaults['com.mekkablue.Shadow.keepSidebearings'])
+		self.keepSidebearingsCheckbox.setState_(Glyphs.defaults['com.mekkablue.Shadow.keepSidebearings'])
 		
 		# Set focus to text field
 		self.offsetField.becomeFirstResponder()
@@ -204,8 +237,13 @@ class Shadow(FilterWithDialog):
 			layer.correctPathDirection()
 			
 			if keepSidebearings:
-				layer.LSB = originalLSB
-				layer.RSB = originalRSB
+				# shift layer contents so LSB matches:
+				shiftX = originalLSB-layer.LSB
+				shiftMatrix = transform(shiftX=shiftX).transformStruct()
+				layer.applyTransform(shiftMatrix)
+				
+				# adjust width so RSB matches:
+				layer.width += originalRSB-layer.RSB
 
 	def mergeLayerIntoLayer(self, sourceLayer, targetLayer):
 		for p in sourceLayer.paths:
