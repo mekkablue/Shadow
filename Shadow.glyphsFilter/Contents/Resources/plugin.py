@@ -1,23 +1,51 @@
 # encoding: utf-8
+from __future__ import division, print_function, unicode_literals
 
-####################################################################################################
+###########################################################################################################
 #
-# Filter with dialog Plugin
 #
-# Read the docs:
-# https://github.com/schriftgestalt/GlyphsSDK/tree/master/Python%20Templates/Filter%20with%20Dialog
+#	Filter with dialog Plugin
 #
-# For help on the use of Interface Builder:
-# https://github.com/schriftgestalt/GlyphsSDK/tree/master/Python%20Templates
+#	Read the docs:
+#	https://github.com/schriftgestalt/GlyphsSDK/tree/master/Python%20Templates/Filter%20with%20Dialog
 #
-####################################################################################################
+#	For help on the use of Interface Builder:
+#	https://github.com/schriftgestalt/GlyphsSDK/tree/master/Python%20Templates
+#
+#
+###########################################################################################################
 
 import objc, math
 from GlyphsApp import *
 from GlyphsApp.plugins import *
 
 from AppKit import NSAffineTransform, NSAffineTransformStruct
+from Foundation import NSClassFromString
 
+@objc.python_method
+def offsetTheLayer( thisLayer, offsetX, offsetY, makeStroke=False, position=0.5, autoStroke=False ):
+	offsetFilter = NSClassFromString("GlyphsFilterOffsetCurve")
+	try:
+		# GLYPHS 3:	
+		offsetFilter.offsetLayer_offsetX_offsetY_makeStroke_autoStroke_position_metrics_error_shadow_capStyleStart_capStyleEnd_keepCompatibleOutlines_(
+			thisLayer,
+			offsetX, offsetY, # horizontal and vertical offset
+			makeStroke,     # if True, creates a stroke
+			autoStroke,     # if True, distorts resulting shape to vertical metrics
+			position,       # stroke distribution to the left and right, 0.5 = middle
+			None, None, None, 0, 0, False )
+	except:
+		# GLYPHS 2:
+		offsetFilter.offsetLayer_offsetX_offsetY_makeStroke_autoStroke_position_error_shadow_(
+			thisLayer,
+			offsetX, offsetY, # horizontal and vertical offset
+			makeStroke,     # if True, creates a stroke
+			autoStroke,     # if True, distorts resulting shape to vertical metrics
+			position,       # stroke distribution to the left and right, 0.5 = middle
+			None, None )
+
+
+@objc.python_method
 def transform(shiftX=0.0, shiftY=0.0, rotate=0.0, skew=0.0, scale=1.0):
 	"""
 	Returns an NSAffineTransform object for transforming layers.
@@ -59,6 +87,7 @@ class Shadow(FilterWithDialog):
 	shouldRoundCheckbox = objc.IBOutlet()
 	keepSidebearingsCheckbox = objc.IBOutlet()
 	
+	@objc.python_method
 	def settings(self):
 		self.menuName = Glyphs.localize({
 			'en': u'Shadow',
@@ -82,6 +111,7 @@ class Shadow(FilterWithDialog):
 		self.loadNib('IBdialog', __file__)
 	
 	# On dialog show
+	@objc.python_method
 	def start(self):
 		# Set defaults
 		Glyphs.registerDefault('com.mekkablue.Shadow.offset', 15.0)
@@ -143,25 +173,26 @@ class Shadow(FilterWithDialog):
 		self.update()
 	
 	# Actual filter
-	def filter(self, layer, inEditView, customParameters):
-		if not layer is None: # circumvents a bug in 2.5b
+	@objc.python_method
+	def filter(self, thisLayer, inEditView, customParameters):
+		if not thisLayer is None: # circumvents a bug in 2.5b
 			# fallback values:
 			offset, offsetY, distanceX, distanceY = 15, 15, 15, 15
 			shouldRound, keepSidebearings = 1, 0
 			
 			if len(customParameters) > 0:
 				# Called on font export, get value from customParameters
-				if customParameters.has_key('offset'):
+				if 'offset' in customParameters:
 					offset = customParameters['offset']
-				if customParameters.has_key('offsetY'):
+				if 'offsetY' in customParameters:
 					offsetY = customParameters['offsetY']
-				if customParameters.has_key('distanceX'):
+				if 'distanceX' in customParameters:
 					distanceX = customParameters['distanceX']
-				if customParameters.has_key('distanceY'):
+				if 'distanceY' in customParameters:
 					distanceY = customParameters['distanceY']
-				if customParameters.has_key('shouldRound'):
+				if 'shouldRound' in customParameters:
 					distanceY = customParameters['shouldRound']
-				if customParameters.has_key('keepSidebearings'):
+				if 'keepSidebearings' in customParameters:
 					distanceY = customParameters['keepSidebearings']
 
 			# Called through UI, use stored value
@@ -173,18 +204,16 @@ class Shadow(FilterWithDialog):
 				shouldRound = bool(Glyphs.defaults['com.mekkablue.Shadow.shouldRound'])
 				keepSidebearings = bool(Glyphs.defaults['com.mekkablue.Shadow.keepSidebearings'])
 
-			layer.decomposeComponents()
-			offsetLayer = layer.copy()
-			originalLSB = layer.LSB
-			originalRSB = layer.RSB
+			thisLayer.decomposeComponents()
+			offsetLayer = thisLayer.copy()
+			originalLSB = thisLayer.LSB
+			originalRSB = thisLayer.RSB
+			originalBBoxWidth = thisLayer.bounds.size.width
+			originalWidth = thisLayer.width
 		
 			# Create offset rim:
 			if offset != 0.0:
-				offsetFilter = NSClassFromString("GlyphsFilterOffsetCurve")
-				offsetFilter.offsetLayer_offsetX_offsetY_makeStroke_autoStroke_position_error_shadow_(
-								offsetLayer, 
-								offset, offsetY,
-								False, False, 0.5, None,None)
+				offsetTheLayer( offsetLayer, offset, offsetY, makeStroke=False, position=0.5, autoStroke=False )
 				
 				if shouldRound:
 					roundFilter = NSClassFromString("GlyphsFilterRoundCorner")
@@ -200,55 +229,71 @@ class Shadow(FilterWithDialog):
 				
 				# only create shadow if there is no offset rim:
 				if offset == 0.0:
-					# prepare layers for subtraction:
-					layer.removeOverlap()
+					# prepare thisLayers for subtraction:
+					thisLayer.removeOverlap()
 					shadowLayer.removeOverlap()
 					
 					# subtract:
 					subtractedPaths = [p for p in shadowLayer.paths]
 					pathOperator = NSClassFromString("GSPathOperator").alloc().init()
 					pathOperator.subtractPaths_from_error_debug_(
-						[p for p in layer.paths],
+						[p for p in thisLayer.paths],
 						subtractedPaths,
 						None, False
 					)
 					
-					# transfer the subtraction result into the main layer, and we are done:
-					layer.paths = subtractedPaths
+					# transfer the subtraction result into the main thisLayer, and we are done:
+					try:
+						thisLayer.shapes = subtractedPaths
+					except:
+						thisLayer.paths = subtractedPaths
 					
-				# if there is an offset, merge rim and shadow layers:
+				# if there is an offset, merge rim and shadow thisLayers:
 				else:
 					try:
 						offsetLayer.appendLayer_(shadowLayer)
 					except:
 						self.mergeLayerIntoLayer(shadowLayer,offsetLayer)
 		
-			layer.removeOverlap()
+			thisLayer.removeOverlap()
 			
 			# if there is an offset, merge original paths with merged rim+shadow paths:
 			if offset != 0.0:
 				offsetLayer.removeOverlap()
 				try:
-					layer.appendLayer_(offsetLayer)
+					thisLayer.appendLayer_(offsetLayer)
 				except:
-					self.mergeLayerIntoLayer(offsetLayer,layer)
+					self.mergeLayerIntoLayer(offsetLayer,thisLayer)
 			
-			layer.cleanUpPaths()
-			layer.correctPathDirection()
+			thisLayer.cleanUpPaths()
+			thisLayer.correctPathDirection()
 			
 			if keepSidebearings:
-				# shift layer contents so LSB matches:
-				shiftX = originalLSB-layer.LSB
+				# shift thisLayer contents so LSB matches:
+				shiftX = originalLSB-thisLayer.LSB
 				shiftMatrix = transform(shiftX=shiftX).transformStruct()
-				layer.applyTransform(shiftMatrix)
+				try:
+					# GLYPHS 3:
+					for thisShape in thisLayer.shapes:
+						thisShape.applyTransform(shiftMatrix)
+				except:
+					# GLYPHS 2:
+					thisLayer.applyTransform(shiftMatrix)
 				
 				# adjust width so RSB matches:
-				layer.width += originalRSB-layer.RSB
+				thisLayer.width += thisLayer.bounds.size.width-originalBBoxWidth
+				# this messes up the shadow layer in Glyphs 3… WTF
+				thisLayer.updateMetrics()
 
+	@objc.python_method
 	def mergeLayerIntoLayer(self, sourceLayer, targetLayer):
 		for p in sourceLayer.paths:
-			targetLayer.addPath_(p.copy())
+			try:
+				targetLayer.shapes.append(p.copy())
+			except:
+				targetLayer.paths.append(p.copy())
 	
+	@objc.python_method
 	def generateCustomParameter( self ):
 		return "%s; offset:%s; offsetY:%s; distanceX:%s; distanceY:%s; shouldRound:%i; keepSidebearings:%i" % (
 			self.__class__.__name__,
@@ -260,6 +305,7 @@ class Shadow(FilterWithDialog):
 			Glyphs.defaults['com.mekkablue.Shadow.keepSidebearings'],
 			)
 		
+	@objc.python_method
 	def __file__(self):
 		"""Please leave this method unchanged"""
 		return __file__
