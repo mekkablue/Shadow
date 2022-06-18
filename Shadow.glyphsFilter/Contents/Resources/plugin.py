@@ -18,6 +18,7 @@ from __future__ import division, print_function, unicode_literals
 import objc, math
 from GlyphsApp import *
 from GlyphsApp.plugins import *
+from GlyphsApp import subtractPaths as subtractPaths
 
 from AppKit import NSAffineTransform, NSAffineTransformStruct
 from Foundation import NSClassFromString
@@ -78,6 +79,10 @@ def transform(shiftX=0.0, shiftY=0.0, rotate=0.0, skew=0.0, scale=1.0):
 	return myTransform
 
 class Shadow(FilterWithDialog):
+	prefID = "com.mekkablue.Shadow"
+	if Glyphs.versionNumber < 3:
+		# GLYPHS 2
+		pathOperator = NSClassFromString("GSPathOperator").alloc().init() # needs to be initialized only once
 	
 	# Definitions of IBOutlets
 	dialog = objc.IBOutlet()
@@ -110,24 +115,38 @@ class Shadow(FilterWithDialog):
 		# Load dialog from .nib (without .extension)
 		self.loadNib('IBdialog', __file__)
 	
+	@objc.python_method
+	def domain(self, prefName):
+		prefName = prefName.strip().strip(".")
+		return self.prefID + "." + prefName.strip()
+
+	@objc.python_method
+	def pref(self, prefName):
+		prefDomain = self.domain(prefName)
+		return Glyphs.defaults[prefDomain]
+	
+	@objc.python_method
+	def registerDefaults(self, sender=None):
+		Glyphs.registerDefault(self.domain('offset'), 15.0)
+		Glyphs.registerDefault(self.domain('offsetY'), 15.0)
+		Glyphs.registerDefault(self.domain('distanceX'), 15.0)
+		Glyphs.registerDefault(self.domain('distanceY'), 15.0)
+		Glyphs.registerDefault(self.domain('shouldRound'), 1)
+		Glyphs.registerDefault(self.domain('keepSidebearings'), 1)
+	
 	# On dialog show
 	@objc.python_method
 	def start(self):
 		# Set defaults
-		Glyphs.registerDefault('com.mekkablue.Shadow.offset', 15.0)
-		Glyphs.registerDefault('com.mekkablue.Shadow.offsetY', 15.0)
-		Glyphs.registerDefault('com.mekkablue.Shadow.distanceX', 15.0)
-		Glyphs.registerDefault('com.mekkablue.Shadow.distanceY', 15.0)
-		Glyphs.registerDefault('com.mekkablue.Shadow.shouldRound', 1)
-		Glyphs.registerDefault('com.mekkablue.Shadow.keepSidebearings', 1)
+		self.registerDefaults()
 
 		# Set value of text field
-		self.offsetField.setStringValue_(Glyphs.defaults['com.mekkablue.Shadow.offset'])
-		self.offsetField.setStringValue_(Glyphs.defaults['com.mekkablue.Shadow.offsetY'])
-		self.distanceXField.setStringValue_(Glyphs.defaults['com.mekkablue.Shadow.distanceX'])
-		self.distanceYField.setStringValue_(Glyphs.defaults['com.mekkablue.Shadow.distanceY'])
-		self.shouldRoundCheckbox.setState_(Glyphs.defaults['com.mekkablue.Shadow.shouldRound'])
-		self.keepSidebearingsCheckbox.setState_(Glyphs.defaults['com.mekkablue.Shadow.keepSidebearings'])
+		self.offsetField.setStringValue_(self.pref('offset'))
+		self.offsetField.setStringValue_(self.pref('offsetY'))
+		self.distanceXField.setStringValue_(self.pref('distanceX'))
+		self.distanceYField.setStringValue_(self.pref('distanceY'))
+		self.shouldRoundCheckbox.setState_(self.pref('shouldRound'))
+		self.keepSidebearingsCheckbox.setState_(self.pref('keepSidebearings'))
 		
 		# Set focus to text field
 		self.offsetField.becomeFirstResponder()
@@ -141,35 +160,35 @@ class Shadow(FilterWithDialog):
 		# Store value coming in from dialog
 		if ";" in sender.stringValue():
 			try:
-				Glyphs.defaults['com.mekkablue.Shadow.offset'] = int(sender.stringValue().split(";")[0].strip())
-				Glyphs.defaults['com.mekkablue.Shadow.offsetY'] = int(sender.stringValue().split(";")[1].strip())
+				Glyphs.defaults[self.domain('offset')] = int(sender.stringValue().split(";")[0].strip())
+				Glyphs.defaults[self.domain('offsetY')] = int(sender.stringValue().split(";")[1].strip())
 			except:
 				# exit gracefully (probably user did not finish entering his values)
 				pass
 		else:
-			Glyphs.defaults['com.mekkablue.Shadow.offset'] = sender.intValue()
-			Glyphs.defaults['com.mekkablue.Shadow.offsetY'] = sender.intValue()
+			Glyphs.defaults[self.domain('offset')] = sender.intValue()
+			Glyphs.defaults[self.domain('offsetY')] = sender.intValue()
 		# Trigger redraw
 		self.update()
 
 	@objc.IBAction
 	def setDistanceX_( self, sender ):
-		Glyphs.defaults['com.mekkablue.Shadow.distanceX'] = sender.floatValue()
+		Glyphs.defaults[self.domain('distanceX')] = sender.floatValue()
 		self.update()
 
 	@objc.IBAction
 	def setDistanceY_( self, sender ):
-		Glyphs.defaults['com.mekkablue.Shadow.distanceY'] = sender.floatValue()
+		Glyphs.defaults[self.domain('distanceY')] = sender.floatValue()
 		self.update()
 
 	@objc.IBAction
 	def setShouldRound_( self, sender ):
-		Glyphs.defaults['com.mekkablue.Shadow.shouldRound'] = sender.state()
+		Glyphs.defaults[self.domain('shouldRound')] = sender.state()
 		self.update()
 
 	@objc.IBAction
 	def setKeepSidebearings_( self, sender ):
-		Glyphs.defaults['com.mekkablue.Shadow.keepSidebearings'] = sender.state()
+		Glyphs.defaults[self.domain('keepSidebearings')] = sender.state()
 		self.update()
 	
 	# Actual filter
@@ -197,12 +216,12 @@ class Shadow(FilterWithDialog):
 
 			# Called through UI, use stored value
 			else:
-				offset = int(Glyphs.defaults['com.mekkablue.Shadow.offset'])
-				offsetY = int(Glyphs.defaults['com.mekkablue.Shadow.offsetY'])
-				distanceX = float(Glyphs.defaults['com.mekkablue.Shadow.distanceX'])
-				distanceY = float(Glyphs.defaults['com.mekkablue.Shadow.distanceY'])
-				shouldRound = bool(Glyphs.defaults['com.mekkablue.Shadow.shouldRound'])
-				keepSidebearings = bool(Glyphs.defaults['com.mekkablue.Shadow.keepSidebearings'])
+				offset = int(self.pref('offset'))
+				offsetY = int(self.pref('offsetY'))
+				distanceX = float(self.pref('distanceX'))
+				distanceY = float(self.pref('distanceY'))
+				shouldRound = bool(self.pref('shouldRound'))
+				keepSidebearings = bool(self.pref('keepSidebearings'))
 
 			thisLayer.decomposeComponents()
 			offsetLayer = thisLayer.copy()
@@ -233,20 +252,13 @@ class Shadow(FilterWithDialog):
 					thisLayer.removeOverlap()
 					shadowLayer.removeOverlap()
 					
-					# subtract:
-					subtractedPaths = [p for p in shadowLayer.paths]
-					pathOperator = NSClassFromString("GSPathOperator").alloc().init()
-					pathOperator.subtractPaths_from_error_debug_(
-						[p for p in thisLayer.paths],
-						subtractedPaths,
-						None, False
-					)
+					paths = shadowLayer.paths # list of original paths
+					subPaths = thisLayer.paths # list of paths to be subtracted from original paths
 					
 					# transfer the subtraction result into the main thisLayer, and we are done:
-					try:
-						thisLayer.shapes = subtractedPaths
-					except:
-						thisLayer.paths = subtractedPaths
+					thesePaths = subtractPaths(list(paths), list(subPaths))
+					if thesePaths:
+						thisLayer.shapes = thesePaths
 					
 				# if there is an offset, merge rim and shadow thisLayers:
 				else:
@@ -254,7 +266,6 @@ class Shadow(FilterWithDialog):
 						offsetLayer.appendLayer_(shadowLayer)
 					except:
 						self.mergeLayerIntoLayer(shadowLayer,offsetLayer)
-		
 			thisLayer.removeOverlap()
 			
 			# if there is an offset, merge original paths with merged rim+shadow paths:
@@ -295,14 +306,15 @@ class Shadow(FilterWithDialog):
 	
 	@objc.python_method
 	def generateCustomParameter( self ):
+		self.registerDefaults()
 		return "%s; offset:%s; offsetY:%s; distanceX:%s; distanceY:%s; shouldRound:%i; keepSidebearings:%i" % (
 			self.__class__.__name__,
-			Glyphs.defaults['com.mekkablue.Shadow.offset'],
-			Glyphs.defaults['com.mekkablue.Shadow.offsetY'],
-			Glyphs.defaults['com.mekkablue.Shadow.distanceX'],
-			Glyphs.defaults['com.mekkablue.Shadow.distanceY'],
-			Glyphs.defaults['com.mekkablue.Shadow.shouldRound'],
-			Glyphs.defaults['com.mekkablue.Shadow.keepSidebearings'],
+			self.pref('offset'),
+			self.pref('offsetY'),
+			self.pref('distanceX'),
+			self.pref('distanceY'),
+			self.pref('shouldRound'),
+			self.pref('keepSidebearings'),
 			)
 		
 	@objc.python_method
