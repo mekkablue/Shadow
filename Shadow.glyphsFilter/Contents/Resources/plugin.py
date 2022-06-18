@@ -210,9 +210,9 @@ class Shadow(FilterWithDialog):
 				if 'distanceY' in customParameters:
 					distanceY = customParameters['distanceY']
 				if 'shouldRound' in customParameters:
-					distanceY = customParameters['shouldRound']
+					shouldRound = customParameters['shouldRound']
 				if 'keepSidebearings' in customParameters:
-					distanceY = customParameters['keepSidebearings']
+					keepSidebearings = customParameters['keepSidebearings']
 
 			# Called through UI, use stored value
 			else:
@@ -222,7 +222,7 @@ class Shadow(FilterWithDialog):
 				distanceY = float(self.pref('distanceY'))
 				shouldRound = bool(self.pref('shouldRound'))
 				keepSidebearings = bool(self.pref('keepSidebearings'))
-
+			
 			thisLayer.decomposeComponents()
 			offsetLayer = thisLayer.copy()
 			originalLSB = thisLayer.LSB
@@ -243,8 +243,9 @@ class Shadow(FilterWithDialog):
 		
 			# Create and offset Shadow only if it has a distance:
 			if distanceX != 0.0 or distanceY != 0.0:
+				offsetMatrix = (1,0,0,1,distanceX,-distanceY)
 				shadowLayer = offsetLayer.copy()
-				shadowLayer.applyTransform( (1,0,0,1,distanceX,-distanceY) )
+				shadowLayer.applyTransform( offsetMatrix )
 				
 				# only create shadow if there is no offset rim:
 				if offset == 0.0:

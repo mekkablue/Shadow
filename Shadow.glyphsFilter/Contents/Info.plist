@@ -13,9 +13,9 @@
 	<key>CFBundleName</key>
 	<string>Shadow</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.1</string>
+	<string>2.1.1</string>
 	<key>CFBundleVersion</key>
-	<string>23</string>
+	<string>24</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright, Rainer Erich Scheichelbauer, 2017-2018</string>
 	<key>NSPrincipalClass</key>
@@ -29,6 +29,6 @@
 	<key>productPageURL</key>
 	<string>https://github.com/mekkablue/Shadow</string>
 	<key>productReleaseNotes</key>
-	<string>Fix Offset=0</string>
+	<string>Fixed y distance for shadow</string>
 </dict>
 </plist>
