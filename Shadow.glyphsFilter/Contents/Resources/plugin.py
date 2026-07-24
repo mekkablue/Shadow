@@ -16,9 +16,8 @@ from __future__ import division, print_function, unicode_literals
 ###########################################################################################################
 
 import objc, math
-from GlyphsApp import *
-from GlyphsApp.plugins import *
-from GlyphsApp import subtractPaths as subtractPaths
+from GlyphsApp import Glyphs, subtractPaths
+from GlyphsApp.plugins import FilterWithDialog
 
 from AppKit import NSAffineTransform, NSAffineTransformStruct
 from Foundation import NSClassFromString
